@@ -1,0 +1,10 @@
+[tools]
+deno = "latest"
+
+[tasks.start]
+description = "Start main task"
+run = "deno task run"
+
+[tasks.test]
+description = "Run tests"
+run = "deno task test"
