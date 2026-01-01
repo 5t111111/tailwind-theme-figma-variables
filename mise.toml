@@ -8,3 +8,7 @@ run = "deno task run"
 [tasks.test]
 description = "Run tests"
 run = "deno task test"
+
+[tasks.fmt]
+description = "Format code"
+run = "deno fmt"
