@@ -140,6 +140,77 @@ Output JSON:
 }
 ```
 
+### Radius
+
+Converts Tailwind CSS border radius settings to Figma variables.
+
+#### Specification
+
+- Radius values are grouped together in the `Radius` namespace for Figma
+  variables
+- All CSS variables in the format `--radius-{size}` are converted to radius
+  variables
+- Figma variable names are `radius-{size}` (the `--radius-` prefix is preserved)
+- rem to px conversion: `1rem = 16px`
+- Output format conforms to the W3C Design Tokens Format
+- `$type` is `"number"` (Figma handles radius as numeric values)
+
+#### Example
+
+Input CSS:
+
+```css
+--radius-xs: 0.125rem;
+--radius-sm: 0.25rem;
+--radius-md: 0.375rem;
+--radius-lg: 0.5rem;
+--radius-xl: 0.75rem;
+--radius-2xl: 1rem;
+--radius-3xl: 1.5rem;
+--radius-4xl: 2rem;
+```
+
+Output JSON:
+
+```json
+{
+  "Radius": {
+    "radius-xs": {
+      "$type": "number",
+      "$value": 2
+    },
+    "radius-sm": {
+      "$type": "number",
+      "$value": 4
+    },
+    "radius-md": {
+      "$type": "number",
+      "$value": 6
+    },
+    "radius-lg": {
+      "$type": "number",
+      "$value": 8
+    },
+    "radius-xl": {
+      "$type": "number",
+      "$value": 12
+    },
+    "radius-2xl": {
+      "$type": "number",
+      "$value": 16
+    },
+    "radius-3xl": {
+      "$type": "number",
+      "$value": 24
+    },
+    "radius-4xl": {
+      "$type": "number",
+      "$value": 32
+    }
+  }
+}
+```
+
 ## Sample `input.css`
 
 The `tailwindcss-default-theme.css` file contains the

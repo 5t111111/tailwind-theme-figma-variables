@@ -26,11 +26,20 @@ interface SpacingToken {
 }
 
 /**
+ * Radius token in W3C Design Tokens Format
+ */
+interface RadiusToken {
+  $type: "number";
+  $value: number;
+}
+
+/**
  * Design tokens output format
  */
 interface DesignTokens {
   Color: Record<string, ColorToken>;
   Spacing: Record<string, SpacingToken>;
+  Radius: Record<string, RadiusToken>;
 }
 
 /**
@@ -186,6 +195,49 @@ function generateSpacingTokens(baseRem: number): Record<string, SpacingToken> {
 }
 
 /**
+ * Parse CSS file and extract radius variables
+ */
+function parseRadiusVariables(cssContent: string): Map<string, string> {
+  const radiusMap = new Map<string, string>();
+  const radiusRegex = /--radius-([a-z0-9]+):\s*([^;]+);/g;
+
+  let match;
+  while ((match = radiusRegex.exec(cssContent)) !== null) {
+    const name = match[1];
+    const value = match[2].trim();
+    radiusMap.set(name, value);
+  }
+
+  return radiusMap;
+}
+
+/**
+ * Generate radius tokens from radius variables
+ */
+function generateRadiusTokens(
+  radiusVariables: Map<string, string>,
+): Record<string, RadiusToken> {
+  const tokens: Record<string, RadiusToken> = {};
+
+  for (const [name, value] of radiusVariables) {
+    const remValue = parseRemValue(value);
+    if (remValue === null) {
+      console.warn(`Could not parse radius value: ${name} = ${value}`);
+      continue;
+    }
+
+    const pxValue = remToPx(remValue);
+
+    tokens[`radius-${name}`] = {
+      $type: "number",
+      $value: pxValue,
+    };
+  }
+
+  return tokens;
+}
+
+/**
  * Convert Tailwind CSS theme to Figma variables format
  */
 export async function convertThemeToFigmaVariables(
@@ -199,7 +251,7 @@ export async function convertThemeToFigmaVariables(
   const colorVariables = parseColorVariables(cssContent);
 
   // Convert to design tokens format
-  const tokens: DesignTokens = { Color: {}, Spacing: {} };
+  const tokens: DesignTokens = { Color: {}, Spacing: {}, Radius: {} };
 
   for (const [name, value] of colorVariables) {
     let hex: string | null = null;
@@ -236,6 +288,15 @@ export async function convertThemeToFigmaVariables(
     console.log(`Generated spacing tokens with base ${spacingBase}rem`);
   } else {
     console.warn("No --spacing variable found in CSS");
+  }
+
+  // Parse and generate radius tokens
+  const radiusVariables = parseRadiusVariables(cssContent);
+  if (radiusVariables.size > 0) {
+    tokens.Radius = generateRadiusTokens(radiusVariables);
+    console.log(`Generated ${radiusVariables.size} radius tokens`);
+  } else {
+    console.warn("No --radius-* variables found in CSS");
   }
 
   // Write output JSON file

@@ -152,3 +152,59 @@ Deno.test("convertThemeToFigmaVariables - spacing with custom base", async () =>
     await Deno.remove(outputPath);
   }
 });
+
+Deno.test("convertThemeToFigmaVariables - radius conversion", async () => {
+  const testInput = `
+@theme {
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 2rem;
+}
+`;
+
+  const inputPath = await Deno.makeTempFile({ suffix: ".css" });
+  const outputPath = await Deno.makeTempFile({ suffix: ".json" });
+
+  try {
+    await Deno.writeTextFile(inputPath, testInput);
+    await convertThemeToFigmaVariables(inputPath, outputPath);
+
+    const output = JSON.parse(await Deno.readTextFile(outputPath));
+
+    // Verify radius structure
+    assertEquals(typeof output.Radius, "object");
+
+    // Test specific values
+    assertEquals(output.Radius["radius-xs"].$type, "number");
+    assertEquals(output.Radius["radius-xs"].$value, 2); // 0.125rem * 16 = 2px
+
+    assertEquals(output.Radius["radius-sm"].$type, "number");
+    assertEquals(output.Radius["radius-sm"].$value, 4); // 0.25rem * 16 = 4px
+
+    assertEquals(output.Radius["radius-md"].$type, "number");
+    assertEquals(output.Radius["radius-md"].$value, 6); // 0.375rem * 16 = 6px
+
+    assertEquals(output.Radius["radius-lg"].$type, "number");
+    assertEquals(output.Radius["radius-lg"].$value, 8); // 0.5rem * 16 = 8px
+
+    assertEquals(output.Radius["radius-xl"].$type, "number");
+    assertEquals(output.Radius["radius-xl"].$value, 12); // 0.75rem * 16 = 12px
+
+    assertEquals(output.Radius["radius-2xl"].$type, "number");
+    assertEquals(output.Radius["radius-2xl"].$value, 16); // 1rem * 16 = 16px
+
+    assertEquals(output.Radius["radius-3xl"].$type, "number");
+    assertEquals(output.Radius["radius-3xl"].$value, 24); // 1.5rem * 16 = 24px
+
+    assertEquals(output.Radius["radius-4xl"].$type, "number");
+    assertEquals(output.Radius["radius-4xl"].$value, 32); // 2rem * 16 = 32px
+  } finally {
+    await Deno.remove(inputPath);
+    await Deno.remove(outputPath);
+  }
+});
