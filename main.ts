@@ -42,6 +42,54 @@ interface ShadowToken {
 }
 
 /**
+ * Container token in W3C Design Tokens Format
+ */
+interface ContainerToken {
+  $type: "number";
+  $value: number;
+}
+
+/**
+ * Breakpoint token in W3C Design Tokens Format
+ */
+interface BreakpointToken {
+  $type: "number";
+  $value: number;
+}
+
+/**
+ * Text token in W3C Design Tokens Format
+ */
+interface TextToken {
+  $type: "number";
+  $value: number;
+}
+
+/**
+ * Font Weight token in W3C Design Tokens Format
+ */
+interface FontWeightToken {
+  $type: "number";
+  $value: number;
+}
+
+/**
+ * Tracking token in W3C Design Tokens Format
+ */
+interface TrackingToken {
+  $type: "string";
+  $value: string;
+}
+
+/**
+ * Leading token in W3C Design Tokens Format
+ */
+interface LeadingToken {
+  $type: "number";
+  $value: number;
+}
+
+/**
  * Design tokens output format
  */
 interface DesignTokens {
@@ -49,6 +97,12 @@ interface DesignTokens {
   Spacing: Record<string, SpacingToken>;
   Radius: Record<string, RadiusToken>;
   Shadow: Record<string, ShadowToken>;
+  Container: Record<string, ContainerToken>;
+  Breakpoint: Record<string, BreakpointToken>;
+  Text: Record<string, TextToken>;
+  "Font Weight": Record<string, FontWeightToken>;
+  Tracking: Record<string, TrackingToken>;
+  Leading: Record<string, LeadingToken>;
 }
 
 /**
@@ -286,6 +340,308 @@ function generateShadowTokens(
 }
 
 /**
+ * Parse CSS file and extract container variables
+ */
+function parseContainerVariables(cssContent: string): Map<string, string> {
+  const containerMap = new Map<string, string>();
+  const containerRegex = /--container-([a-z0-9]+):\s*([^;]+);/g;
+
+  let match;
+  while ((match = containerRegex.exec(cssContent)) !== null) {
+    const name = match[1];
+    const value = match[2].trim();
+    containerMap.set(name, value);
+  }
+
+  return containerMap;
+}
+
+/**
+ * Generate container tokens from container variables
+ */
+function generateContainerTokens(
+  containerVariables: Map<string, string>,
+): Record<string, ContainerToken> {
+  const tokens: Record<string, ContainerToken> = {};
+
+  for (const [name, value] of containerVariables) {
+    const remValue = parseRemValue(value);
+    if (remValue === null) {
+      console.warn(`Could not parse container value: ${name} = ${value}`);
+      continue;
+    }
+
+    const pxValue = remToPx(remValue);
+
+    tokens[`container-${name}`] = {
+      $type: "number",
+      $value: pxValue,
+    };
+  }
+
+  return tokens;
+}
+
+/**
+ * Parse CSS file and extract breakpoint variables
+ */
+function parseBreakpointVariables(cssContent: string): Map<string, string> {
+  const breakpointMap = new Map<string, string>();
+  const breakpointRegex = /--breakpoint-([a-z0-9]+):\s*([^;]+);/g;
+
+  let match;
+  while ((match = breakpointRegex.exec(cssContent)) !== null) {
+    const name = match[1];
+    const value = match[2].trim();
+    breakpointMap.set(name, value);
+  }
+
+  return breakpointMap;
+}
+
+/**
+ * Generate breakpoint tokens from breakpoint variables
+ */
+function generateBreakpointTokens(
+  breakpointVariables: Map<string, string>,
+): Record<string, BreakpointToken> {
+  const tokens: Record<string, BreakpointToken> = {};
+
+  for (const [name, value] of breakpointVariables) {
+    const remValue = parseRemValue(value);
+    if (remValue === null) {
+      console.warn(`Could not parse breakpoint value: ${name} = ${value}`);
+      continue;
+    }
+
+    const pxValue = remToPx(remValue);
+
+    tokens[`breakpoint-${name}`] = {
+      $type: "number",
+      $value: pxValue,
+    };
+  }
+
+  return tokens;
+}
+
+/**
+ * Parse CSS file and extract text variables (font sizes only, not line-height)
+ */
+function parseTextVariables(cssContent: string): Map<string, string> {
+  const textMap = new Map<string, string>();
+  // Match --text-{size}: but not --text-{size}--line-height
+  const textRegex = /--text-([a-z0-9]+):\s*([^;]+);/g;
+
+  let match;
+  while ((match = textRegex.exec(cssContent)) !== null) {
+    const name = match[1];
+    const value = match[2].trim();
+
+    // Skip if this is a line-height variable
+    if (name.includes("--line-height")) continue;
+
+    textMap.set(name, value);
+  }
+
+  return textMap;
+}
+
+/**
+ * Generate text tokens from text variables
+ */
+function generateTextTokens(
+  textVariables: Map<string, string>,
+): Record<string, TextToken> {
+  const tokens: Record<string, TextToken> = {};
+
+  for (const [name, value] of textVariables) {
+    const remValue = parseRemValue(value);
+    if (remValue === null) {
+      console.warn(`Could not parse text value: ${name} = ${value}`);
+      continue;
+    }
+
+    const pxValue = remToPx(remValue);
+
+    tokens[`text-${name}`] = {
+      $type: "number",
+      $value: pxValue,
+    };
+  }
+
+  return tokens;
+}
+
+/**
+ * Parse CSS file and extract font-weight variables
+ */
+function parseFontWeightVariables(cssContent: string): Map<string, string> {
+  const fontWeightMap = new Map<string, string>();
+  const fontWeightRegex = /--font-weight-([a-z]+):\s*([^;]+);/g;
+
+  let match;
+  while ((match = fontWeightRegex.exec(cssContent)) !== null) {
+    const name = match[1];
+    const value = match[2].trim();
+    fontWeightMap.set(name, value);
+  }
+
+  return fontWeightMap;
+}
+
+/**
+ * Generate font-weight tokens from font-weight variables
+ */
+function generateFontWeightTokens(
+  fontWeightVariables: Map<string, string>,
+): Record<string, FontWeightToken> {
+  const tokens: Record<string, FontWeightToken> = {};
+
+  for (const [name, value] of fontWeightVariables) {
+    const numericValue = parseInt(value, 10);
+    if (isNaN(numericValue)) {
+      console.warn(`Could not parse font-weight value: ${name} = ${value}`);
+      continue;
+    }
+
+    tokens[`font-weight-${name}`] = {
+      $type: "number",
+      $value: numericValue,
+    };
+  }
+
+  return tokens;
+}
+
+/**
+ * Parse CSS file and extract tracking variables
+ */
+function parseTrackingVariables(cssContent: string): Map<string, string> {
+  const trackingMap = new Map<string, string>();
+  const trackingRegex = /--tracking-([a-z]+):\s*([^;]+);/g;
+
+  let match;
+  while ((match = trackingRegex.exec(cssContent)) !== null) {
+    const name = match[1];
+    const value = match[2].trim();
+    trackingMap.set(name, value);
+  }
+
+  return trackingMap;
+}
+
+/**
+ * Generate tracking tokens from tracking variables
+ */
+function generateTrackingTokens(
+  trackingVariables: Map<string, string>,
+): Record<string, TrackingToken> {
+  const tokens: Record<string, TrackingToken> = {};
+
+  for (const [name, value] of trackingVariables) {
+    tokens[`tracking-${name}`] = {
+      $type: "string",
+      $value: value,
+    };
+  }
+
+  return tokens;
+}
+
+/**
+ * Evaluate calc() expressions
+ */
+function evaluateCalc(calcString: string): number | null {
+  // Extract the calc() content
+  const match = calcString.match(/calc\(([^)]+)\)/);
+  if (!match) {
+    // Not a calc expression, try parsing as number
+    const num = parseFloat(calcString);
+    return isNaN(num) ? null : num;
+  }
+
+  const expression = match[1].trim();
+
+  try {
+    // Simple evaluation for division and multiplication
+    if (expression.includes("/")) {
+      const [numerator, denominator] = expression.split("/").map((s) =>
+        parseFloat(s.trim())
+      );
+      return numerator / denominator;
+    } else if (expression.includes("*")) {
+      const [left, right] = expression.split("*").map((s) =>
+        parseFloat(s.trim())
+      );
+      return left * right;
+    }
+
+    // Fallback to direct parsing
+    const num = parseFloat(expression);
+    return isNaN(num) ? null : num;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Parse CSS file and extract leading variables
+ */
+function parseLeadingVariables(cssContent: string): Map<string, string> {
+  const leadingMap = new Map<string, string>();
+
+  // Match both --leading-{name} and --text-{size}--line-height
+  const leadingRegex = /--leading-([a-z]+):\s*([^;]+);/g;
+  const textLineHeightRegex = /--text-([a-z0-9]+)--line-height:\s*([^;]+);/g;
+
+  let match;
+
+  // Parse --leading-* variables
+  while ((match = leadingRegex.exec(cssContent)) !== null) {
+    const name = match[1];
+    const value = match[2].trim();
+    leadingMap.set(`leading-${name}`, value);
+  }
+
+  // Parse --text-*--line-height variables
+  while ((match = textLineHeightRegex.exec(cssContent)) !== null) {
+    const size = match[1];
+    const value = match[2].trim();
+    leadingMap.set(`text-${size}--line-height`, value);
+  }
+
+  return leadingMap;
+}
+
+/**
+ * Generate leading tokens from leading variables
+ */
+function generateLeadingTokens(
+  leadingVariables: Map<string, string>,
+): Record<string, LeadingToken> {
+  const tokens: Record<string, LeadingToken> = {};
+
+  for (const [name, value] of leadingVariables) {
+    const numericValue = evaluateCalc(value);
+    if (numericValue === null) {
+      console.warn(`Could not parse leading value: ${name} = ${value}`);
+      continue;
+    }
+
+    // Round to 3 decimal places
+    const roundedValue = Math.round(numericValue * 1000) / 1000;
+
+    tokens[name] = {
+      $type: "number",
+      $value: roundedValue,
+    };
+  }
+
+  return tokens;
+}
+
+/**
  * Convert Tailwind CSS theme to Figma variables format
  */
 export async function convertThemeToFigmaVariables(
@@ -304,6 +660,12 @@ export async function convertThemeToFigmaVariables(
     Spacing: {},
     Radius: {},
     Shadow: {},
+    Container: {},
+    Breakpoint: {},
+    Text: {},
+    "Font Weight": {},
+    Tracking: {},
+    Leading: {},
   };
 
   for (const [name, value] of colorVariables) {
@@ -359,6 +721,62 @@ export async function convertThemeToFigmaVariables(
     console.log(`Generated ${shadowVariables.size} shadow tokens`);
   } else {
     console.warn("No shadow variables found in CSS");
+  }
+
+  // Parse and generate container tokens
+  const containerVariables = parseContainerVariables(cssContent);
+  if (containerVariables.size > 0) {
+    tokens.Container = generateContainerTokens(containerVariables);
+    console.log(`Generated ${containerVariables.size} container tokens`);
+  } else {
+    console.warn("No --container-* variables found in CSS");
+  }
+
+  // Parse and generate breakpoint tokens
+  const breakpointVariables = parseBreakpointVariables(cssContent);
+  if (breakpointVariables.size > 0) {
+    tokens.Breakpoint = generateBreakpointTokens(breakpointVariables);
+    console.log(`Generated ${breakpointVariables.size} breakpoint tokens`);
+  } else {
+    console.warn("No --breakpoint-* variables found in CSS");
+  }
+
+  // Parse and generate text tokens
+  const textVariables = parseTextVariables(cssContent);
+  if (textVariables.size > 0) {
+    tokens.Text = generateTextTokens(textVariables);
+    console.log(`Generated ${textVariables.size} text tokens`);
+  } else {
+    console.warn("No --text-* variables found in CSS");
+  }
+
+  // Parse and generate font-weight tokens
+  const fontWeightVariables = parseFontWeightVariables(cssContent);
+  if (fontWeightVariables.size > 0) {
+    tokens["Font Weight"] = generateFontWeightTokens(fontWeightVariables);
+    console.log(`Generated ${fontWeightVariables.size} font-weight tokens`);
+  } else {
+    console.warn("No --font-weight-* variables found in CSS");
+  }
+
+  // Parse and generate tracking tokens
+  const trackingVariables = parseTrackingVariables(cssContent);
+  if (trackingVariables.size > 0) {
+    tokens.Tracking = generateTrackingTokens(trackingVariables);
+    console.log(`Generated ${trackingVariables.size} tracking tokens`);
+  } else {
+    console.warn("No --tracking-* variables found in CSS");
+  }
+
+  // Parse and generate leading tokens
+  const leadingVariables = parseLeadingVariables(cssContent);
+  if (leadingVariables.size > 0) {
+    tokens.Leading = generateLeadingTokens(leadingVariables);
+    console.log(`Generated ${leadingVariables.size} leading tokens`);
+  } else {
+    console.warn(
+      "No --leading-* or --text-*--line-height variables found in CSS",
+    );
   }
 
   // Write output JSON file

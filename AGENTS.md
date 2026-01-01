@@ -274,6 +274,297 @@ Output JSON:
 }
 ```
 
+### Container
+
+Converts Tailwind CSS container settings to Figma variables.
+
+#### Specification
+
+- Container values are grouped together in the `Container` namespace for Figma
+  variables
+- All CSS variables in the format `--container-{size}` are converted to
+  container variables
+- Figma variable names are `container-{size}` (the `--container-` prefix is
+  preserved)
+- rem to px conversion: `1rem = 16px`
+- Output format conforms to the W3C Design Tokens Format
+- `$type` is `"number"` (Figma handles container widths as numeric values)
+
+#### Example
+
+Input CSS:
+
+```css
+--container-xs: 20rem;
+--container-sm: 24rem;
+--container-md: 28rem;
+```
+
+Output JSON:
+
+```json
+{
+  "Container": {
+    "container-xs": {
+      "$type": "number",
+      "$value": 320
+    },
+    "container-sm": {
+      "$type": "number",
+      "$value": 384
+    },
+    "container-md": {
+      "$type": "number",
+      "$value": 448
+    }
+  }
+}
+```
+
+### Breakpoint
+
+Converts Tailwind CSS breakpoint settings to Figma variables.
+
+#### Specification
+
+- Breakpoint values are grouped together in the `Breakpoint` namespace for Figma
+  variables
+- All CSS variables in the format `--breakpoint-{size}` are converted to
+  breakpoint variables
+- Figma variable names are `breakpoint-{size}` (the `--breakpoint-` prefix is
+  preserved)
+- rem to px conversion: `1rem = 16px`
+- Output format conforms to the W3C Design Tokens Format
+- `$type` is `"number"` (Figma handles breakpoints as numeric values)
+
+#### Example
+
+Input CSS:
+
+```css
+--breakpoint-sm: 40rem;
+--breakpoint-md: 48rem;
+--breakpoint-lg: 64rem;
+```
+
+Output JSON:
+
+```json
+{
+  "Breakpoint": {
+    "breakpoint-sm": {
+      "$type": "number",
+      "$value": 640
+    },
+    "breakpoint-md": {
+      "$type": "number",
+      "$value": 768
+    },
+    "breakpoint-lg": {
+      "$type": "number",
+      "$value": 1024
+    }
+  }
+}
+```
+
+### Text
+
+Converts Tailwind CSS text size settings to Figma variables.
+
+#### Specification
+
+- Text size values are grouped together in the `Text` namespace for Figma
+  variables
+- All CSS variables in the format `--text-{size}` (without `--line-height`
+  suffix) are converted to text variables
+- Figma variable names are `text-{size}` (the `--text-` prefix is preserved)
+- rem to px conversion: `1rem = 16px`
+- Output format conforms to the W3C Design Tokens Format
+- `$type` is `"number"` (Figma handles font sizes as numeric values)
+- Note: Line height values (`--text-{size}--line-height`) are handled by the
+  Leading conversion (see below)
+
+#### Example
+
+Input CSS:
+
+```css
+--text-xs: 0.75rem;
+--text-sm: 0.875rem;
+--text-base: 1rem;
+```
+
+Output JSON:
+
+```json
+{
+  "Text": {
+    "text-xs": {
+      "$type": "number",
+      "$value": 12
+    },
+    "text-sm": {
+      "$type": "number",
+      "$value": 14
+    },
+    "text-base": {
+      "$type": "number",
+      "$value": 16
+    }
+  }
+}
+```
+
+### Font Weight
+
+Converts Tailwind CSS font weight settings to Figma variables.
+
+#### Specification
+
+- Font weight values are grouped together in the `Font Weight` namespace for
+  Figma variables
+- All CSS variables in the format `--font-weight-{name}` are converted to font
+  weight variables
+- Figma variable names are `font-weight-{name}` (the `--font-weight-` prefix is
+  preserved)
+- Values are numeric (100-900) and used as-is without conversion
+- Output format conforms to the W3C Design Tokens Format
+- `$type` is `"number"` (font weight values are numeric)
+
+#### Example
+
+Input CSS:
+
+```css
+--font-weight-light: 300;
+--font-weight-normal: 400;
+--font-weight-bold: 700;
+```
+
+Output JSON:
+
+```json
+{
+  "Font Weight": {
+    "font-weight-light": {
+      "$type": "number",
+      "$value": 300
+    },
+    "font-weight-normal": {
+      "$type": "number",
+      "$value": 400
+    },
+    "font-weight-bold": {
+      "$type": "number",
+      "$value": 700
+    }
+  }
+}
+```
+
+### Tracking
+
+Converts Tailwind CSS letter spacing (tracking) settings to Figma variables.
+
+#### Specification
+
+- Tracking values are grouped together in the `Tracking` namespace for Figma
+  variables
+- All CSS variables in the format `--tracking-{name}` are converted to tracking
+  variables
+- Figma variable names are `tracking-{name}` (the `--tracking-` prefix is
+  preserved)
+- Values are in `em` units and stored as strings without conversion
+- Output format conforms to the W3C Design Tokens Format
+- `$type` is `"string"` (tracking values are CSS strings with units)
+
+#### Example
+
+Input CSS:
+
+```css
+--tracking-tight: -0.025em;
+--tracking-normal: 0em;
+--tracking-wide: 0.025em;
+```
+
+Output JSON:
+
+```json
+{
+  "Tracking": {
+    "tracking-tight": {
+      "$type": "string",
+      "$value": "-0.025em"
+    },
+    "tracking-normal": {
+      "$type": "string",
+      "$value": "0em"
+    },
+    "tracking-wide": {
+      "$type": "string",
+      "$value": "0.025em"
+    }
+  }
+}
+```
+
+### Leading
+
+Converts Tailwind CSS line height (leading) settings to Figma variables.
+
+#### Specification
+
+- Line height values are grouped together in the `Leading` namespace for Figma
+  variables
+- Includes two types of CSS variables:
+  - `--leading-{name}`: Generic line height values (leading-tight,
+    leading-normal, etc.)
+  - `--text-{size}--line-height`: Text size-specific line height values
+    (text-xs--line-height, text-sm--line-height, etc.)
+- Figma variable names preserve the original CSS variable name (without `--`
+  prefix)
+- Values may be in `calc()` format which need to be evaluated to numeric values
+- Output format conforms to the W3C Design Tokens Format
+- `$type` is `"number"` (line height values are unitless numeric ratios)
+
+#### Example
+
+Input CSS:
+
+```css
+--leading-tight: 1.25;
+--leading-normal: 1.5;
+--text-xs--line-height: calc(1 / 0.75);
+--text-sm--line-height: calc(1.25 / 0.875);
+```
+
+Output JSON:
+
+```json
+{
+  "Leading": {
+    "leading-tight": {
+      "$type": "number",
+      "$value": 1.25
+    },
+    "leading-normal": {
+      "$type": "number",
+      "$value": 1.5
+    },
+    "text-xs--line-height": {
+      "$type": "number",
+      "$value": 1.333
+    },
+    "text-sm--line-height": {
+      "$type": "number",
+      "$value": 1.429
+    }
+  }
+}
+```
+
 ## Sample `input.css`
 
 The `tailwindcss-default-theme.css` file contains the

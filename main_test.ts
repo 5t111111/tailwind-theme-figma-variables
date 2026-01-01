@@ -270,3 +270,219 @@ Deno.test("convertThemeToFigmaVariables - shadow conversion", async () => {
     await Deno.remove(outputPath);
   }
 });
+
+Deno.test("convertThemeToFigmaVariables - container conversion", async () => {
+  const testInput = `
+@theme {
+  --container-xs: 20rem;
+  --container-sm: 24rem;
+  --container-md: 28rem;
+}
+`;
+
+  const inputPath = await Deno.makeTempFile({ suffix: ".css" });
+  const outputPath = await Deno.makeTempFile({ suffix: ".json" });
+
+  try {
+    await Deno.writeTextFile(inputPath, testInput);
+    await convertThemeToFigmaVariables(inputPath, outputPath);
+
+    const output = JSON.parse(await Deno.readTextFile(outputPath));
+
+    // Verify container structure
+    assertEquals(typeof output.Container, "object");
+
+    assertEquals(output.Container["container-xs"].$type, "number");
+    assertEquals(output.Container["container-xs"].$value, 320); // 20rem * 16
+
+    assertEquals(output.Container["container-sm"].$type, "number");
+    assertEquals(output.Container["container-sm"].$value, 384); // 24rem * 16
+
+    assertEquals(output.Container["container-md"].$type, "number");
+    assertEquals(output.Container["container-md"].$value, 448); // 28rem * 16
+  } finally {
+    await Deno.remove(inputPath);
+    await Deno.remove(outputPath);
+  }
+});
+
+Deno.test("convertThemeToFigmaVariables - breakpoint conversion", async () => {
+  const testInput = `
+@theme {
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+}
+`;
+
+  const inputPath = await Deno.makeTempFile({ suffix: ".css" });
+  const outputPath = await Deno.makeTempFile({ suffix: ".json" });
+
+  try {
+    await Deno.writeTextFile(inputPath, testInput);
+    await convertThemeToFigmaVariables(inputPath, outputPath);
+
+    const output = JSON.parse(await Deno.readTextFile(outputPath));
+
+    // Verify breakpoint structure
+    assertEquals(typeof output.Breakpoint, "object");
+
+    assertEquals(output.Breakpoint["breakpoint-sm"].$type, "number");
+    assertEquals(output.Breakpoint["breakpoint-sm"].$value, 640); // 40rem * 16
+
+    assertEquals(output.Breakpoint["breakpoint-md"].$type, "number");
+    assertEquals(output.Breakpoint["breakpoint-md"].$value, 768); // 48rem * 16
+
+    assertEquals(output.Breakpoint["breakpoint-lg"].$type, "number");
+    assertEquals(output.Breakpoint["breakpoint-lg"].$value, 1024); // 64rem * 16
+  } finally {
+    await Deno.remove(inputPath);
+    await Deno.remove(outputPath);
+  }
+});
+
+Deno.test("convertThemeToFigmaVariables - text conversion", async () => {
+  const testInput = `
+@theme {
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+}
+`;
+
+  const inputPath = await Deno.makeTempFile({ suffix: ".css" });
+  const outputPath = await Deno.makeTempFile({ suffix: ".json" });
+
+  try {
+    await Deno.writeTextFile(inputPath, testInput);
+    await convertThemeToFigmaVariables(inputPath, outputPath);
+
+    const output = JSON.parse(await Deno.readTextFile(outputPath));
+
+    // Verify text structure
+    assertEquals(typeof output.Text, "object");
+
+    assertEquals(output.Text["text-xs"].$type, "number");
+    assertEquals(output.Text["text-xs"].$value, 12); // 0.75rem * 16
+
+    assertEquals(output.Text["text-sm"].$type, "number");
+    assertEquals(output.Text["text-sm"].$value, 14); // 0.875rem * 16
+
+    assertEquals(output.Text["text-base"].$type, "number");
+    assertEquals(output.Text["text-base"].$value, 16); // 1rem * 16
+  } finally {
+    await Deno.remove(inputPath);
+    await Deno.remove(outputPath);
+  }
+});
+
+Deno.test("convertThemeToFigmaVariables - font-weight conversion", async () => {
+  const testInput = `
+@theme {
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+}
+`;
+
+  const inputPath = await Deno.makeTempFile({ suffix: ".css" });
+  const outputPath = await Deno.makeTempFile({ suffix: ".json" });
+
+  try {
+    await Deno.writeTextFile(inputPath, testInput);
+    await convertThemeToFigmaVariables(inputPath, outputPath);
+
+    const output = JSON.parse(await Deno.readTextFile(outputPath));
+
+    // Verify font-weight structure
+    assertEquals(typeof output["Font Weight"], "object");
+
+    assertEquals(output["Font Weight"]["font-weight-light"].$type, "number");
+    assertEquals(output["Font Weight"]["font-weight-light"].$value, 300);
+
+    assertEquals(output["Font Weight"]["font-weight-normal"].$type, "number");
+    assertEquals(output["Font Weight"]["font-weight-normal"].$value, 400);
+
+    assertEquals(output["Font Weight"]["font-weight-bold"].$type, "number");
+    assertEquals(output["Font Weight"]["font-weight-bold"].$value, 700);
+  } finally {
+    await Deno.remove(inputPath);
+    await Deno.remove(outputPath);
+  }
+});
+
+Deno.test("convertThemeToFigmaVariables - tracking conversion", async () => {
+  const testInput = `
+@theme {
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+}
+`;
+
+  const inputPath = await Deno.makeTempFile({ suffix: ".css" });
+  const outputPath = await Deno.makeTempFile({ suffix: ".json" });
+
+  try {
+    await Deno.writeTextFile(inputPath, testInput);
+    await convertThemeToFigmaVariables(inputPath, outputPath);
+
+    const output = JSON.parse(await Deno.readTextFile(outputPath));
+
+    // Verify tracking structure
+    assertEquals(typeof output.Tracking, "object");
+
+    assertEquals(output.Tracking["tracking-tight"].$type, "string");
+    assertEquals(output.Tracking["tracking-tight"].$value, "-0.025em");
+
+    assertEquals(output.Tracking["tracking-normal"].$type, "string");
+    assertEquals(output.Tracking["tracking-normal"].$value, "0em");
+
+    assertEquals(output.Tracking["tracking-wide"].$type, "string");
+    assertEquals(output.Tracking["tracking-wide"].$value, "0.025em");
+  } finally {
+    await Deno.remove(inputPath);
+    await Deno.remove(outputPath);
+  }
+});
+
+Deno.test("convertThemeToFigmaVariables - leading conversion", async () => {
+  const testInput = `
+@theme {
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --text-xs--line-height: calc(1 / 0.75);
+  --text-sm--line-height: calc(1.25 / 0.875);
+}
+`;
+
+  const inputPath = await Deno.makeTempFile({ suffix: ".css" });
+  const outputPath = await Deno.makeTempFile({ suffix: ".json" });
+
+  try {
+    await Deno.writeTextFile(inputPath, testInput);
+    await convertThemeToFigmaVariables(inputPath, outputPath);
+
+    const output = JSON.parse(await Deno.readTextFile(outputPath));
+
+    // Verify leading structure
+    assertEquals(typeof output.Leading, "object");
+
+    // Test --leading-* variables
+    assertEquals(output.Leading["leading-tight"].$type, "number");
+    assertEquals(output.Leading["leading-tight"].$value, 1.25);
+
+    assertEquals(output.Leading["leading-normal"].$type, "number");
+    assertEquals(output.Leading["leading-normal"].$value, 1.5);
+
+    // Test --text-*--line-height variables with calc()
+    assertEquals(output.Leading["text-xs--line-height"].$type, "number");
+    assertEquals(output.Leading["text-xs--line-height"].$value, 1.333);
+
+    assertEquals(output.Leading["text-sm--line-height"].$type, "number");
+    assertEquals(output.Leading["text-sm--line-height"].$value, 1.429);
+  } finally {
+    await Deno.remove(inputPath);
+    await Deno.remove(outputPath);
+  }
+});
