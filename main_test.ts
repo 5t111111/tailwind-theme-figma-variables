@@ -58,7 +58,10 @@ Deno.test("convertThemeToFigmaVariables - oklch conversion", async () => {
     // Should have converted oklch to hex
     assertEquals(output.Color["color-blue-500"].$type, "color");
     assertEquals(typeof output.Color["color-blue-500"].$value.hex, "string");
-    assertEquals(output.Color["color-blue-500"].$value.hex.startsWith("#"), true);
+    assertEquals(
+      output.Color["color-blue-500"].$value.hex.startsWith("#"),
+      true,
+    );
     assertEquals(output.Color["color-blue-500"].$value.components.length, 3);
 
     // Components should be in 0-1 range

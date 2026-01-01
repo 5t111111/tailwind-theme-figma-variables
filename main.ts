@@ -91,8 +91,40 @@ function parseColorVariables(cssContent: string): Map<string, string> {
  * Spacing scale multipliers used in Tailwind CSS
  */
 const SPACING_MULTIPLIERS = [
-  0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-  14, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72, 80, 96,
+  0,
+  0.5,
+  1,
+  1.5,
+  2,
+  2.5,
+  3,
+  3.5,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  14,
+  16,
+  20,
+  24,
+  28,
+  32,
+  36,
+  40,
+  44,
+  48,
+  52,
+  56,
+  60,
+  64,
+  72,
+  80,
+  96,
 ];
 
 /**
@@ -132,7 +164,9 @@ function generateSpacingTokens(baseRem: number): Record<string, SpacingToken> {
 
   // Generate tokens for each multiplier
   for (const multiplier of SPACING_MULTIPLIERS) {
-    const key = `spacing-${Number.isInteger(multiplier) ? String(multiplier) : String(multiplier)}`;
+    const key = `spacing-${
+      Number.isInteger(multiplier) ? String(multiplier) : String(multiplier)
+    }`;
     const remValue = baseRem * multiplier;
     const pxValue = remToPx(remValue);
 
@@ -171,9 +205,9 @@ export async function convertThemeToFigmaVariables(
     let hex: string | null = null;
 
     // Check if the value is already in hex format
-    if (value.startsWith('#')) {
+    if (value.startsWith("#")) {
       hex = value;
-    } else if (value.startsWith('oklch(')) {
+    } else if (value.startsWith("oklch(")) {
       // Convert oklch to hex
       hex = oklchToHex(value);
     }
@@ -221,7 +255,10 @@ if (import.meta.main) {
   try {
     await convertThemeToFigmaVariables(inputPath, outputPath);
   } catch (error) {
-    console.error("Error:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "Error:",
+      error instanceof Error ? error.message : String(error),
+    );
     Deno.exit(1);
   }
 }
