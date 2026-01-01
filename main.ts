@@ -34,12 +34,21 @@ interface RadiusToken {
 }
 
 /**
+ * Shadow token in W3C Design Tokens Format
+ */
+interface ShadowToken {
+  $type: "string";
+  $value: string;
+}
+
+/**
  * Design tokens output format
  */
 interface DesignTokens {
   Color: Record<string, ColorToken>;
   Spacing: Record<string, SpacingToken>;
   Radius: Record<string, RadiusToken>;
+  Shadow: Record<string, ShadowToken>;
 }
 
 /**
@@ -238,6 +247,45 @@ function generateRadiusTokens(
 }
 
 /**
+ * Parse CSS file and extract shadow variables
+ */
+function parseShadowVariables(cssContent: string): Map<string, string> {
+  const shadowMap = new Map<string, string>();
+  // Match shadow, inset-shadow, drop-shadow, text-shadow
+  const shadowRegex =
+    /--((?:inset-)?shadow|(?:drop|text)-shadow)-([a-z0-9]+):\s*([^;]+);/g;
+
+  let match;
+  while ((match = shadowRegex.exec(cssContent)) !== null) {
+    const prefix = match[1]; // shadow, inset-shadow, drop-shadow, text-shadow
+    const size = match[2]; // xs, sm, md, etc.
+    const value = match[3].trim();
+    const fullName = `${prefix}-${size}`;
+    shadowMap.set(fullName, value);
+  }
+
+  return shadowMap;
+}
+
+/**
+ * Generate shadow tokens from shadow variables
+ */
+function generateShadowTokens(
+  shadowVariables: Map<string, string>,
+): Record<string, ShadowToken> {
+  const tokens: Record<string, ShadowToken> = {};
+
+  for (const [name, value] of shadowVariables) {
+    tokens[name] = {
+      $type: "string",
+      $value: value,
+    };
+  }
+
+  return tokens;
+}
+
+/**
  * Convert Tailwind CSS theme to Figma variables format
  */
 export async function convertThemeToFigmaVariables(
@@ -251,7 +299,12 @@ export async function convertThemeToFigmaVariables(
   const colorVariables = parseColorVariables(cssContent);
 
   // Convert to design tokens format
-  const tokens: DesignTokens = { Color: {}, Spacing: {}, Radius: {} };
+  const tokens: DesignTokens = {
+    Color: {},
+    Spacing: {},
+    Radius: {},
+    Shadow: {},
+  };
 
   for (const [name, value] of colorVariables) {
     let hex: string | null = null;
@@ -297,6 +350,15 @@ export async function convertThemeToFigmaVariables(
     console.log(`Generated ${radiusVariables.size} radius tokens`);
   } else {
     console.warn("No --radius-* variables found in CSS");
+  }
+
+  // Parse and generate shadow tokens
+  const shadowVariables = parseShadowVariables(cssContent);
+  if (shadowVariables.size > 0) {
+    tokens.Shadow = generateShadowTokens(shadowVariables);
+    console.log(`Generated ${shadowVariables.size} shadow tokens`);
+  } else {
+    console.warn("No shadow variables found in CSS");
   }
 
   // Write output JSON file

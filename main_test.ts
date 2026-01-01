@@ -208,3 +208,65 @@ Deno.test("convertThemeToFigmaVariables - radius conversion", async () => {
     await Deno.remove(outputPath);
   }
 });
+
+Deno.test("convertThemeToFigmaVariables - shadow conversion", async () => {
+  const testInput = `
+@theme {
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --inset-shadow-xs: inset 0 1px 1px rgb(0 0 0 / 0.05);
+  --drop-shadow-xs: 0 1px 1px rgb(0 0 0 / 0.05);
+  --text-shadow-xs: 0px 1px 1px rgb(0 0 0 / 0.2);
+}
+`;
+
+  const inputPath = await Deno.makeTempFile({ suffix: ".css" });
+  const outputPath = await Deno.makeTempFile({ suffix: ".json" });
+
+  try {
+    await Deno.writeTextFile(inputPath, testInput);
+    await convertThemeToFigmaVariables(inputPath, outputPath);
+
+    const output = JSON.parse(await Deno.readTextFile(outputPath));
+
+    // Verify shadow structure
+    assertEquals(typeof output.Shadow, "object");
+
+    // Test shadow values
+    assertEquals(output.Shadow["shadow-xs"].$type, "string");
+    assertEquals(
+      output.Shadow["shadow-xs"].$value,
+      "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    );
+
+    assertEquals(output.Shadow["shadow-sm"].$type, "string");
+    assertEquals(
+      output.Shadow["shadow-sm"].$value,
+      "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+    );
+
+    // Test inset-shadow
+    assertEquals(output.Shadow["inset-shadow-xs"].$type, "string");
+    assertEquals(
+      output.Shadow["inset-shadow-xs"].$value,
+      "inset 0 1px 1px rgb(0 0 0 / 0.05)",
+    );
+
+    // Test drop-shadow
+    assertEquals(output.Shadow["drop-shadow-xs"].$type, "string");
+    assertEquals(
+      output.Shadow["drop-shadow-xs"].$value,
+      "0 1px 1px rgb(0 0 0 / 0.05)",
+    );
+
+    // Test text-shadow
+    assertEquals(output.Shadow["text-shadow-xs"].$type, "string");
+    assertEquals(
+      output.Shadow["text-shadow-xs"].$value,
+      "0px 1px 1px rgb(0 0 0 / 0.2)",
+    );
+  } finally {
+    await Deno.remove(inputPath);
+    await Deno.remove(outputPath);
+  }
+});

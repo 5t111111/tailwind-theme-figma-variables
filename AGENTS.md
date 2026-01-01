@@ -211,6 +211,69 @@ Output JSON:
 }
 ```
 
+### Shadow
+
+Converts Tailwind CSS shadow settings to Figma variables.
+
+#### Specification
+
+- Shadow values are grouped together in the `Shadow` namespace for Figma
+  variables
+- Includes all shadow-related CSS variables:
+  - `--shadow-*`: Box shadows (shadow-2xs, shadow-xs, shadow-sm, shadow-md,
+    shadow-lg, shadow-xl, shadow-2xl)
+  - `--inset-shadow-*`: Inset box shadows (inset-shadow-2xs, inset-shadow-xs,
+    inset-shadow-sm)
+  - `--drop-shadow-*`: Drop shadows for filters (drop-shadow-xs, drop-shadow-sm,
+    drop-shadow-md, drop-shadow-lg, drop-shadow-xl, drop-shadow-2xl)
+  - `--text-shadow-*`: Text shadows (text-shadow-2xs, text-shadow-xs,
+    text-shadow-sm, text-shadow-md, text-shadow-lg)
+- Figma variable names preserve the full prefix to indicate shadow type (e.g.,
+  `shadow-xs`, `inset-shadow-xs`, `drop-shadow-xs`, `text-shadow-xs`)
+- Output format conforms to the W3C Design Tokens Format
+- `$type` is `"string"` (shadow values are CSS strings)
+
+#### Example
+
+Input CSS:
+
+```css
+--shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+--shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+--inset-shadow-xs: inset 0 1px 1px rgb(0 0 0 / 0.05);
+--drop-shadow-xs: 0 1px 1px rgb(0 0 0 / 0.05);
+--text-shadow-xs: 0px 1px 1px rgb(0 0 0 / 0.2);
+```
+
+Output JSON:
+
+```json
+{
+  "Shadow": {
+    "shadow-xs": {
+      "$type": "string",
+      "$value": "0 1px 2px 0 rgb(0 0 0 / 0.05)"
+    },
+    "shadow-sm": {
+      "$type": "string",
+      "$value": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)"
+    },
+    "inset-shadow-xs": {
+      "$type": "string",
+      "$value": "inset 0 1px 1px rgb(0 0 0 / 0.05)"
+    },
+    "drop-shadow-xs": {
+      "$type": "string",
+      "$value": "0 1px 1px rgb(0 0 0 / 0.05)"
+    },
+    "text-shadow-xs": {
+      "$type": "string",
+      "$value": "0px 1px 1px rgb(0 0 0 / 0.2)"
+    }
+  }
+}
+```
+
 ## Sample `input.css`
 
 The `tailwindcss-default-theme.css` file contains the
