@@ -18,10 +18,19 @@ interface ColorToken {
 }
 
 /**
+ * Spacing token in W3C Design Tokens Format
+ */
+interface SpacingToken {
+  $type: "number";
+  $value: number;
+}
+
+/**
  * Design tokens output format
  */
 interface DesignTokens {
-  color: Record<string, ColorToken>;
+  Color: Record<string, ColorToken>;
+  Spacing: Record<string, SpacingToken>;
 }
 
 /**
@@ -79,6 +88,70 @@ function parseColorVariables(cssContent: string): Map<string, string> {
 }
 
 /**
+ * Spacing scale multipliers used in Tailwind CSS
+ */
+const SPACING_MULTIPLIERS = [
+  0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+  14, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72, 80, 96,
+];
+
+/**
+ * Parse rem value to number (in rem units)
+ */
+function parseRemValue(value: string): number | null {
+  const match = value.match(/^([\d.]+)rem$/);
+  if (!match) return null;
+  return parseFloat(match[1]);
+}
+
+/**
+ * Convert rem to px (1rem = 16px)
+ */
+function remToPx(rem: number): number {
+  return rem * 16;
+}
+
+/**
+ * Parse CSS file and extract spacing base value
+ */
+function parseSpacingBase(cssContent: string): number | null {
+  const spacingRegex = /--spacing:\s*([^;]+);/;
+  const match = cssContent.match(spacingRegex);
+
+  if (!match) return null;
+
+  const value = match[1].trim();
+  return parseRemValue(value);
+}
+
+/**
+ * Generate spacing tokens from base value
+ */
+function generateSpacingTokens(baseRem: number): Record<string, SpacingToken> {
+  const tokens: Record<string, SpacingToken> = {};
+
+  // Generate tokens for each multiplier
+  for (const multiplier of SPACING_MULTIPLIERS) {
+    const key = `spacing-${Number.isInteger(multiplier) ? String(multiplier) : String(multiplier)}`;
+    const remValue = baseRem * multiplier;
+    const pxValue = remToPx(remValue);
+
+    tokens[key] = {
+      $type: "number",
+      $value: pxValue,
+    };
+  }
+
+  // Special case: "spacing-px" is always 1px
+  tokens["spacing-px"] = {
+    $type: "number",
+    $value: 1,
+  };
+
+  return tokens;
+}
+
+/**
  * Convert Tailwind CSS theme to Figma variables format
  */
 export async function convertThemeToFigmaVariables(
@@ -92,7 +165,7 @@ export async function convertThemeToFigmaVariables(
   const colorVariables = parseColorVariables(cssContent);
 
   // Convert to design tokens format
-  const tokens: DesignTokens = { color: {} };
+  const tokens: DesignTokens = { Color: {}, Spacing: {} };
 
   for (const [name, value] of colorVariables) {
     let hex: string | null = null;
@@ -112,7 +185,7 @@ export async function convertThemeToFigmaVariables(
 
     const components = hexToComponents(hex);
 
-    tokens.color[name] = {
+    tokens.Color[`color-${name}`] = {
       $type: "color",
       $value: {
         colorSpace: "srgb",
@@ -120,6 +193,15 @@ export async function convertThemeToFigmaVariables(
         hex,
       },
     };
+  }
+
+  // Parse and generate spacing tokens
+  const spacingBase = parseSpacingBase(cssContent);
+  if (spacingBase !== null) {
+    tokens.Spacing = generateSpacingTokens(spacingBase);
+    console.log(`Generated spacing tokens with base ${spacingBase}rem`);
+  } else {
+    console.warn("No --spacing variable found in CSS");
   }
 
   // Write output JSON file
